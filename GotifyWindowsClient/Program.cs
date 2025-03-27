@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
@@ -106,12 +107,12 @@ namespace GotifyWindowsClient
             var config = ConfigurationManager.AppSettings;
             var serverUrl = config["ServerUrl"] ?? "http://localhost:3000";
             var clientToken = config["ClientToken"];
-
+            var topics = config["Topics"];
             var wsUrl = serverUrl
                 .Replace("http://", "ws://")
                 .Replace("https://", "wss://")
                 + $"/stream?token={clientToken}";
-
+            var topiclist = topics.Contains(",") ? topics.Split(',', StringSplitOptions.RemoveEmptyEntries) : new[] { topics };
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
             while (true)
@@ -140,9 +141,16 @@ namespace GotifyWindowsClient
                             {
                                 var message = JsonSerializer.Deserialize<GotifyMessage>(jsonBytes, options);
                                 var title = string.IsNullOrEmpty(message.Title) ? "无标题" : message.Title;
-                                var content = string.IsNullOrEmpty(message.Content) ? "空内容" : message.Content;
-
-                                ShowNotification(title, content);
+                                foreach(var item in topiclist)
+                                {
+                                    if(title.Contains(item))
+                                    {
+                                        var content = string.IsNullOrEmpty(message.Content) ? "空内容" : message.Content;
+                                        ShowNotification(title, content);
+                                    }
+                                      
+                                }
+                               
                             }
                             catch (JsonException ex)
                             {
