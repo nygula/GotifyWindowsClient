@@ -12,6 +12,9 @@ namespace GotifyWindowsClient
         [JsonPropertyName("id")]
         public int Id { get; set; }
 
+        [JsonPropertyName("appid")]
+        public int Appid { get; set; }
+
         [JsonPropertyName("message")]
         public string Content { get; set; }
 

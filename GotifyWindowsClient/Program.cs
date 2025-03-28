@@ -107,12 +107,12 @@ namespace GotifyWindowsClient
             var config = ConfigurationManager.AppSettings;
             var serverUrl = config["ServerUrl"] ?? "http://localhost:3000";
             var clientToken = config["ClientToken"];
-            var topics = config["Topics"];
+            var AppIDs = config["AppID"].Split(",");
+             
             var wsUrl = serverUrl
                 .Replace("http://", "ws://")
                 .Replace("https://", "wss://")
                 + $"/stream?token={clientToken}";
-            var topiclist = topics.Contains(",") ? topics.Split(',', StringSplitOptions.RemoveEmptyEntries) : new[] { topics };
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
             while (true)
@@ -139,18 +139,23 @@ namespace GotifyWindowsClient
 
                             try
                             {
+                                var dd = Encoding.UTF8.GetString(jsonBytes);
                                 var message = JsonSerializer.Deserialize<GotifyMessage>(jsonBytes, options);
-                                var title = string.IsNullOrEmpty(message.Title) ? "无标题" : message.Title;
-                                foreach(var item in topiclist)
+                                if(AppIDs.Contains(message.Appid.ToString()) )
                                 {
-                                    if(title.Contains(item))
-                                    {
-                                        var content = string.IsNullOrEmpty(message.Content) ? "空内容" : message.Content;
-                                        ShowNotification(title, content);
-                                    }
-                                      
+                                    var title = string.IsNullOrEmpty(message.Title) ? "无标题" : message.Title;
+                                    var content = string.IsNullOrEmpty(message.Content) ? "空内容" : message.Content;
+                                    ShowNotification(title, content);
+
+
                                 }
-                               
+
+
+
+
+
+
+
                             }
                             catch (JsonException ex)
                             {
